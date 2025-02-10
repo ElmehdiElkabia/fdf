@@ -1,0 +1,75 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: eelkabia <eelkabia@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/01/25 13:02:15 by eelkabia          #+#    #+#             */
+/*   Updated: 2025/02/10 22:53:11 by eelkabia         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/fdf.h"
+
+void init_fdf(t_fdf *fdf)
+{
+	ft_bzero(fdf, sizeof(t_fdf));
+	fdf->window.mlx = mlx_init();
+	if (!fdf->window.mlx)
+		ft_destroy(fdf, "");
+	fdf->window.win = mlx_new_window(fdf->window.mlx, WIDTH, HEIGHT, "FDF");
+	if (!fdf->window.win)
+		ft_destroy(fdf, "");
+	fdf->image.img = mlx_new_image(fdf->window.mlx, WIDTH, HEIGHT);
+	if (!fdf->image.img)
+		ft_destroy(fdf, "");
+	fdf->image.addr = mlx_get_data_addr(fdf->image.img,
+										&fdf->image.bits_per_pixel, &fdf->image.line_length,
+										&fdf->image.endian);
+	if (!fdf->image.addr)
+		ft_destroy(fdf, "");
+}
+
+void init_camera(t_fdf *fdf)
+{
+	fdf->camera.zoom = 10;
+	fdf->camera.angle_x = 0;
+	fdf->camera.angle_y = 0;
+	fdf->camera.angle_z = 0;
+	fdf->camera.offset_x = 0;
+	fdf->camera.offset_y = 0;
+	fdf->camera.projection = 1;
+}
+
+int ft_destroy1(t_fdf *fdf)
+{
+	ft_destroy(fdf, "Exiting program...\n");
+	return (0);
+}
+
+int main(int argc, char **argv)
+{
+	t_fdf fdf;
+	size_t len;
+
+	if (argc == 2)
+	{
+		len = ft_strlen(argv[1]);
+		if (len < 5 || ft_strncmp(argv[1] + len - 4, ".fdf", 4) != 0 || argv[1][len - 5] == '.')
+		{
+			ft_putendl_fd("Error: Invalid file extension. Use a .fdf file", 2);
+			return (1);
+		}
+		init_fdf(&fdf);
+		init_map(argv[1], &fdf);
+		parse_map(argv[1], &fdf);
+		init_camera(&fdf);
+		render_map(&fdf);
+		mlx_key_hook(fdf.window.win, key_hook, &fdf);
+		mlx_hook(fdf.window.win, 17, 0, ft_destroy1, &fdf);
+		mlx_loop(fdf.window.mlx);
+	}
+	else
+		ft_putendl_fd("Error :Usage: ./fdf <filename>", 2);
+}
